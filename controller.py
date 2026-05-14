@@ -343,6 +343,7 @@ def _state_key(dist, abs_yaw_err, wind):
 # =============================================================================
 # CSV WAYPOINT LOADER
 # =============================================================================
+<<<<<<< HEAD
 
 def _load_csv_targets(csv_path=None):
     """
@@ -352,6 +353,23 @@ def _load_csv_targets(csv_path=None):
     if csv_path is None:
         csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "targets.csv")
 
+=======
+def _load_csv_targets(csv_path=None):
+    """
+    Loads a sequence of target waypoints from a CSV file.
+    Provides a default square pattern if the file is missing or invalid.
+    
+    Args:
+        csv_path (str): Path to the CSV file containing target coordinates.
+                        If None, defaults to 'targets.csv' in the same directory as this file.
+        
+    Returns:
+        tuple: A tuple of target tuples: ((x1, y1, z1, yaw1), (x2, y2, z2, yaw2), ...)
+    """
+    if csv_path is None:
+        csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "targets.csv")
+    # Default fallback flight pattern (a simple 2x2 square at 2m altitude)
+>>>>>>> 07d710f5bd881e1f2b5093dca36bf5f9b74103d5
     _DEFAULTS = (
         ( 2.0,  2.0, 2.0, 0.0),
         (-2.0,  2.0, 2.0, 1.57),
@@ -787,6 +805,7 @@ def controller(state, target_pos, dt, wind_enabled=False):
     yr       = _clip(kp_yaw * errs["eyaw"] + ki_yaw * mem["integral_yaw"],
                      -yaw_rate_max, yaw_rate_max)
 
+<<<<<<< HEAD
     # =========================================================================
     # STEP 7 – 3-D vector speed scaling (straight-line constant-speed flight)
     # v_mag_pid: magnitude of the raw PID world-frame velocity vector.
@@ -808,6 +827,23 @@ def controller(state, target_pos, dt, wind_enabled=False):
         v_scale = v_cruise_max / v_mag_pid                 # Cruising: enforce constant speed.
     else:
         v_scale = min(1.0, v_cruise_max / v_mag_pid)       # Precision: cap but allow slowdown.
+=======
+    # Step 5b: Apply 3D Vector Scaling for Constant Speed & Straight Path
+    v_mag_raw = math.sqrt(vx_w_raw**2 + vy_w_raw**2 + vz_w_raw**2)
+    v_target_speed = min(v_xy_max, v_z_max) # The safe maximum speed limit
+    
+    if v_mag_raw < 0.001:
+        scale = 0.0
+    elif errs["dist"] > 0.25:
+        # Cruising Phase: Force the magnitude to EXACTLY v_target_speed.
+        # This guarantees an "even speed throughout the flight time" while maintaining the 
+        # exact straight-line 3D direction prescribed by the World Frame PID.
+        scale = v_target_speed / v_mag_raw
+    else:
+        # Precision Phase (< 0.25m): Allow the drone to slow down naturally to hold hover.
+        # We simply cap the maximum vector magnitude without forcing a constant speed.
+        scale = min(1.0, v_target_speed / v_mag_raw)
+>>>>>>> 07d710f5bd881e1f2b5093dca36bf5f9b74103d5
 
     vx_w = vx_w_pid * v_scale
     vy_w = vy_w_pid * v_scale
