@@ -511,17 +511,20 @@ def _replay_update(mem):
 # =============================================================================
 # CSV waypoint loader – fallback when raw_target is None (standalone mode)
 # =============================================================================
-def _load_csv_targets(csv_path="targets.csv"):
+def _load_csv_targets(csv_path=None):
     """
     Loads a sequence of target waypoints from a CSV file.
     Provides a default square pattern if the file is missing or invalid.
     
     Args:
         csv_path (str): Path to the CSV file containing target coordinates.
+                        If None, defaults to 'targets.csv' in the same directory as this file.
         
     Returns:
         tuple: A tuple of target tuples: ((x1, y1, z1, yaw1), (x2, y2, z2, yaw2), ...)
     """
+    if csv_path is None:
+        csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "targets.csv")
     # Default fallback flight pattern (a simple 2x2 square at 2m altitude)
     _DEFAULTS = (
         (2.0,  2.0,  2.0, 0.0),
@@ -856,13 +859,13 @@ def controller(state, target_pos, dt, wind_enabled=False):
     
     if v_mag_raw < 0.001:
         scale = 0.0
-    elif errs["dist"] > 0.4:
+    elif errs["dist"] > 0.25:
         # Cruising Phase: Force the magnitude to EXACTLY v_target_speed.
         # This guarantees an "even speed throughout the flight time" while maintaining the 
         # exact straight-line 3D direction prescribed by the World Frame PID.
         scale = v_target_speed / v_mag_raw
     else:
-        # Precision Phase (< 0.4m): Allow the drone to slow down naturally to hold hover.
+        # Precision Phase (< 0.25m): Allow the drone to slow down naturally to hold hover.
         # We simply cap the maximum vector magnitude without forcing a constant speed.
         scale = min(1.0, v_target_speed / v_mag_raw)
 
