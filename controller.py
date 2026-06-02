@@ -793,7 +793,6 @@ def controller(state, target_pos, dt, wind_enabled=False):
     yr       = _clip(kp_yaw * errs["eyaw"] + ki_yaw * mem["integral_yaw"],
                      -yaw_rate_max, yaw_rate_max)
 
-<<<<<<< HEAD
     # =========================================================================
     # STEP 7 – 3-D vector speed scaling (straight-line constant-speed flight)
     # v_mag_pid: magnitude of the raw PID world-frame velocity vector.
@@ -812,26 +811,14 @@ def controller(state, target_pos, dt, wind_enabled=False):
     if v_mag_pid < 0.001:
         v_scale = 0.0                                      # Essentially stationary.
     elif errs["dist"] > 0.25:
-        v_scale = v_cruise_max / v_mag_pid                 # Cruising: enforce constant speed.
-    else:
-        v_scale = min(1.0, v_cruise_max / v_mag_pid)       # Precision: cap but allow slowdown.
-=======
-    # Step 5b: Apply 3D Vector Scaling for Constant Speed & Straight Path
-    v_mag_raw = math.sqrt(vx_w_raw**2 + vy_w_raw**2 + vz_w_raw**2)
-    v_target_speed = min(v_xy_max, v_z_max) # The safe maximum speed limit
-    
-    if v_mag_raw < 0.001:
-        scale = 0.0
-    elif errs["dist"] > 0.25:
-        # Cruising Phase: Force the magnitude to EXACTLY v_target_speed.
-        # This guarantees an "even speed throughout the flight time" while maintaining the 
+        # Cruising Phase: Force the magnitude to EXACTLY v_cruise_max.
+        # This guarantees an "even speed throughout the flight time" while maintaining the
         # exact straight-line 3D direction prescribed by the World Frame PID.
-        scale = v_target_speed / v_mag_raw
+        v_scale = v_cruise_max / v_mag_pid                 # Cruising: enforce constant speed.
     else:
         # Precision Phase (< 0.25m): Allow the drone to slow down naturally to hold hover.
         # We simply cap the maximum vector magnitude without forcing a constant speed.
-        scale = min(1.0, v_target_speed / v_mag_raw)
->>>>>>> 07d710f5bd881e1f2b5093dca36bf5f9b74103d5
+        v_scale = min(1.0, v_cruise_max / v_mag_pid)       # Precision: cap but allow slowdown.
 
     vx_w = vx_w_pid * v_scale
     vy_w = vy_w_pid * v_scale
